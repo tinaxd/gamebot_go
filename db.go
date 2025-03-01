@@ -29,7 +29,7 @@ func CreateGameVoteMaster(gameName string, targetTime *time.Time, messageID stri
 
 func GetVoteMasterByMessageID(messageID string) (*GameVoteMaster, error) {
 	var master GameVoteMaster
-	err := db.Where("messageID = ?", messageID).First(&master).Error
+	err := db.Where("message_id = ?", messageID).First(&master).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
@@ -47,10 +47,10 @@ func VoteToGame(voteMasterID uint, userID string, voteType VoteType) error {
 			VoteType:         voteType,
 		}
 		result := db.Clauses(clause.OnConflict{
-			Columns: []clause.Column{{Name: "voteType"}},
+			Columns: []clause.Column{{Name: "game_vote_master_id"}, {Name: "user_id"}},
 			DoUpdates: clause.Assignments(
 				map[string]interface{}{
-					"voteType": voteType,
+					"vote_type": voteType,
 				},
 			),
 		}).Create(&vote)
@@ -69,10 +69,10 @@ type VoteResult struct {
 
 func GetVoteResult(voteMasterID uint) (VoteResult, error) {
 	var votes []GameVote
-	db.Where("voteMasterID = ?", voteMasterID).Order(
+	db.Where("game_vote_master_id = ?", voteMasterID).Order(
 		clause.OrderBy{Columns: []clause.OrderByColumn{
 			{
-				Column: clause.Column{Name: "updatedAt"},
+				Column: clause.Column{Name: "updated_at"},
 			},
 		}}).Find(&votes)
 

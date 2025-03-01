@@ -32,6 +32,10 @@ func main() {
 		log.Fatalf("failed to connect to db")
 	}
 
+	// Migrate the schema
+	db.AutoMigrate(&GameVoteMaster{})
+	db.AutoMigrate(&GameVote{})
+
 	dg, err := discordgo.New("Bot " + token)
 	if err != nil {
 		log.Fatalf("failed to create instnace: %v", err)
@@ -39,8 +43,6 @@ func main() {
 
 	dg.AddHandler(handleReady)
 	dg.AddHandler(handleInteractionCreate)
-	dg.AddHandler(handleButtonInteraction)
-	dg.AddHandler(handleGameCommand)
 
 	err = dg.Open()
 	if err != nil {

@@ -3,6 +3,7 @@ package gamebot
 import (
 	"context"
 	"errors"
+	"log"
 	"regexp"
 	"strconv"
 	"time"
@@ -71,12 +72,14 @@ func NewNotifier(targetTime time.Time, handler func()) *Notifier {
 }
 
 func (n *Notifier) WaitAndDo(ctx context.Context) {
-	duration := time.Since(n.targetTime)
+	duration := time.Until(n.targetTime)
 	timer := time.NewTimer(duration)
+	log.Printf("notifier will be fired in %.1f seconds", duration.Seconds())
 
 	select {
 	case <-timer.C:
 		// Time has come
+		log.Printf("notifier fired")
 		n.handler()
 	case <-ctx.Done():
 		// Canceled
