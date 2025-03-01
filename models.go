@@ -23,8 +23,8 @@ type GameVoteMaster struct {
 
 type GameVote struct {
 	gorm.Model
-	UserID           string `gorm:"uniqueIndex:idx_game_vote_unique"`
+	UserID           string `gorm:"uniqueIndex:idx_game_vote_unique,priority:2"`
 	VoteType         VoteType
-	GameVoteMasterID uint `gorm:"uniqueIndex:idx_game_vote_unique"`
+	GameVoteMasterID uint `gorm:"uniqueIndex:idx_game_vote_unique,priority:1"`
 	GameVoteMaster   GameVoteMaster
 }
