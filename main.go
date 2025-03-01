@@ -27,7 +27,7 @@ func main() {
 	}
 
 	var err error
-	db, err = gorm.Open(sqlite.Open("gamebot.db"), &gorm.Config{})
+	db, err = gorm.Open(sqlite.Open("data/gamebot.db"), &gorm.Config{})
 	if err != nil {
 		log.Fatalf("failed to connect to db")
 	}
