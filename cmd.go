@@ -27,7 +27,7 @@ var (
 			{
 				Type:        discordgo.ApplicationCommandOptionString,
 				Name:        "time",
-				Description: "ゲームの開始時間(4ケタ)",
+				Description: "ゲームの開始時間(4ケタ)。指定しなくてもよい。",
 				Required:    false,
 			},
 		},

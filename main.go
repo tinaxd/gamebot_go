@@ -86,39 +86,53 @@ func handleGameCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	options := i.ApplicationCommandData().Options
 
 	// Find options by name
-	var gameName, timeStr string
+	var gameName string
+	var timeStr string
+	var hasTimeOption bool
+
 	for _, opt := range options {
 		if opt.Name == "game" {
 			gameName = opt.StringValue()
 		} else if opt.Name == "time" {
 			timeStr = opt.StringValue()
+			hasTimeOption = true
 		}
 	}
 
-	// Validate time string
-	datetime, err := gamebot.ParseTargetTimeFormat(timeStr)
-	if err != nil {
-		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-			Type: discordgo.InteractionResponseChannelMessageWithSource,
-			Data: &discordgo.InteractionResponseData{
-				Content: "Invalid time format. Please use `HH:MM`.",
-				Flags:   discordgo.MessageFlagsEphemeral,
-			},
-		})
-		return
-	}
-	targetTime := gamebot.CalculateNextDay(time.Now(), datetime)
+	var targetTime *time.Time
+	var text string
 
-	// Format time
-	hourStr := fmt.Sprintf("%02d", datetime.Hour)
-	minuteStr := fmt.Sprintf("%02d", datetime.Minute)
-	text := fmt.Sprintf("%s を %s:%s から！", gameName, hourStr, minuteStr)
+	// Only parse time if it was provided
+	if hasTimeOption && timeStr != "" {
+		datetime, err := gamebot.ParseTargetTimeFormat(timeStr)
+		if err != nil {
+			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+				Type: discordgo.InteractionResponseChannelMessageWithSource,
+				Data: &discordgo.InteractionResponseData{
+					Content: "Invalid time format. Please use `HH:MM`.",
+					Flags:   discordgo.MessageFlagsEphemeral,
+				},
+			})
+			return
+		}
+
+		calculatedTime := gamebot.CalculateNextDay(time.Now(), datetime)
+		targetTime = &calculatedTime
+
+		// Format time-specific message
+		hourStr := fmt.Sprintf("%02d", datetime.Hour)
+		minuteStr := fmt.Sprintf("%02d", datetime.Minute)
+		text = fmt.Sprintf("%s を %s:%s から！", gameName, hourStr, minuteStr)
+	} else {
+		// No time specified
+		text = fmt.Sprintf("%s をやりましょう！", gameName)
+	}
 
 	// Generate message components
 	embed, components := generateVoteMessage(gameName, nil, nil, nil)
 
 	// Send response
-	err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+	err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
 			Content:    text,
@@ -144,8 +158,10 @@ func handleGameCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 
-	// Start notifier in goroutine
-	go sendMessageAt(s, i.ChannelID, voteID, gameName, targetTime)
+	// Only start notifier if target time was specified
+	if targetTime != nil {
+		go sendMessageAt(s, i.ChannelID, voteID, gameName, *targetTime)
+	}
 }
 
 func handleButtonInteraction(s *discordgo.Session, i *discordgo.InteractionCreate) {
