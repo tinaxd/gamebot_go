@@ -15,7 +15,7 @@ RUN go mod download
 COPY . .
 
 # Build the application
-RUN go build -o gamebot ./cmd/gamebot
+RUN go build -o gamebot
 
 FROM alpine:latest
 
